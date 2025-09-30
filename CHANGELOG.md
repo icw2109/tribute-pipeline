@@ -3,18 +3,26 @@
 All notable changes to this project will be documented here. Follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) principles (lightly) and semantic versioning for future releases.
 
 ## [Unreleased]
-### Added
-- `docs/DEPRECATIONS.md` formalizing cleanup phases & risk assessment.
-- `scripts/collect_metrics.py` unified metrics aggregator.
-- Deprecation warning emission in `run_all.py`.
-- Baseline CHANGELOG file.
- - `tribute-e2e` console script for one-line end-to-end run.
- - CI workflow (`.github/workflows/ci.yml`) installing package + smoke running.
-
 ### Planned
-- CI workflow (tests + health + validation).
-- Tag baseline release (`v0.1.0`).
 - Notebook `notebooks/pipeline_metrics_report.ipynb` (optional, exploratory).
+- Reliability calibration & confidence reliability bins.
+- Cleanup execution checklist & staged deprecation removals.
+
+## [0.1.2] - 2025-09-30
+### Fixed
+- Correct publication of console script path fix: previous tag `v0.1.1` contained wheel metadata still at 0.1.0 causing old path logic to ship. This release ensures the module-based stage invocation & CWD auto-workdir logic are present in the packaged artifact.
+### Added
+- `RELEASING.md` checklist to avoid tag/version mismatch and enforce smoke test before tagging.
+### Integrity
+- Verified `tribute-e2e` resolves `cli.*` modules (no `src/cli/*.py` paths) and outputs under invocation directory `./out/run_*`.
+
+## [0.1.1] - 2025-09-30
+### Fixed
+- Installed console script (`tribute-e2e` / `tribute-run`) failed invoking `src/cli/*.py` paths outside a source checkout. Switched all stage invocations to module form (`-m cli.scrape`, `-m cli.extract_insights`, `-m cli.classify`, etc.) with fallback for source tree. Auto workDir now rooted at the invoking CWD (not the site-packages install path) when running from an installed wheel.
+### Changed
+- Added source vs installed environment detection heuristic and safer sys.path injection only when needed.
+### Added
+- Output root selection logic + notes in code for future packaging refactors.
 
 ## [0.1.0] - 2025-09-30
 ### Added

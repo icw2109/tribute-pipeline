@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tribute-pipeline"
-version = "0.1.0"
+version = "0.1.2"
 description = "Deterministic crawl → insight extraction → classification pipeline with health/validation"
 authors = [{name = "Your Name", email = "you@example.com"}]
 readme = "README.md"
