@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tribute-pipeline"
-version = "0.1.4"
+version = "0.1.5"
 description = "Deterministic crawl → insight extraction → classification pipeline with health/validation"
 authors = [{name = "Your Name", email = "you@example.com"}]
 readme = "README.md"
@@ -30,12 +30,16 @@ full = ["sentence-transformers", "torch", "transformers"]
 dev = ["pytest", "black"]
 
 [project.scripts]
-# New in-process runner avoids subprocess path fragility.
-tribute-run = "inprocess_runner:main"
-tribute-e2e = "inprocess_runner:main_all"
+# NOTE: The only discovered package at the moment is the top-level 'src' (due to __init__.py).
+# Modules placed directly under src/ are importable as 'src.<module>'. Previous entry points
+# incorrectly referenced them as top-level modules (inprocess_runner, selfcheck) which caused
+# ModuleNotFoundError when installed from a wheel. Long term we may rename the package to
+# 'tribute_pipeline', but for now adjust to the correct fully-qualified module path.
+tribute-run = "src.inprocess_runner:main"
+tribute-e2e = "src.inprocess_runner:main_all"
 tribute-validate = "scripts.validate_delivery:main"
 tribute-synthetic = "scripts.generate_synthetic_predictions:main"
-tribute-selfcheck = "selfcheck:main"
+tribute-selfcheck = "src.selfcheck:main"
 
 [tool.setuptools.packages.find]
 # Include core source tree plus the top-level 'scripts' package so console entrypoints resolve after pip install.

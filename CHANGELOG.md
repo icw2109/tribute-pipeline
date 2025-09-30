@@ -8,6 +8,14 @@ All notable changes to this project will be documented here. Follow [Keep a Chan
 - Reliability calibration & confidence reliability bins.
 - Cleanup execution checklist & staged deprecation removals.
 
+## [0.1.5] - 2025-09-30
+### Fixed
+- Console scripts (`tribute-run`, `tribute-e2e`, `tribute-selfcheck`) failed with `ModuleNotFoundError` because the runner modules live under the implicit `src` package; entry points now reference `src.inprocess_runner` and `src.selfcheck`.
+### Changed
+- Bumped version to 0.1.5 to publish packaging correction.
+### Migration Notes
+- No code changes to pipeline logic; only packaging/entrypoint fix. Upgrade with `pip install --no-cache-dir --upgrade "tribute-pipeline @ git+https://github.com/icw2109/tribute-pipeline.git@v0.1.5"`.
+
 ## [0.1.2] - 2025-09-30
 ### Fixed
 - Correct publication of console script path fix: previous tag `v0.1.1` contained wheel metadata still at 0.1.0 causing old path logic to ship. This release ensures the module-based stage invocation & CWD auto-workdir logic are present in the packaged artifact.
