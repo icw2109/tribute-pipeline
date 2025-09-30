@@ -38,22 +38,45 @@ from __future__ import annotations
 import argparse, json, subprocess, sys, os, datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+# When running from an installed package (console script), __file__ will
+# point inside site-packages. We want auto-workdir runs to land in the user's
+# current working directory (where they invoked the command), not inside the
+# library installation path. Retain original project root behavior when the
+# repository source tree is detected (contains e.g. pyproject.toml).
+_THIS_FILE = Path(__file__).resolve()
+_PKG_ROOT = _THIS_FILE.parents[1]
+_CWD = Path.cwd()
+
+def _detect_source_tree() -> bool:
+    # Heuristic: if pyproject.toml exists alongside scripts/ we are in source checkout
+    return (_PKG_ROOT / 'pyproject.toml').exists() or (_PKG_ROOT / '.git').exists()
+
+_SOURCE_MODE = _detect_source_tree()
+if _SOURCE_MODE:
+    ROOT = _PKG_ROOT
+else:
+    ROOT = _CWD  # always use invoking directory as logical output root when installed
+    if str(_PKG_ROOT) not in sys.path:
+        sys.path.insert(0, str(_PKG_ROOT))
 
 
 def run(cmd: list[str], desc: str):
-    """Run a subprocess command, raising on any non‑zero exit code.
-
-    NOTE: For the health step we intentionally bypass this helper so that
-    exit code 1 (soft issues) can be treated as non‑fatal unless --strict.
-    """
+    """Run a subprocess command, raising on any non‑zero exit code."""
     proc = subprocess.run(cmd, capture_output=True, text=True)
     if proc.returncode != 0:
         sys.stderr.write(f"[{desc}] FAILED CMD: {' '.join(cmd)}\nSTDERR:\n{proc.stderr}\n")
         raise SystemExit(1)
     return proc.stdout.strip()
+
+def _invoke(primary: list[str], fallback: list[str] | None, desc: str):
+    """Try primary command; on failure optionally try fallback then re-raise with guidance."""
+    try:
+        return run(primary, desc)
+    except SystemExit:
+        if fallback:
+            sys.stderr.write(f"[{desc}] primary strategy failed, attempting fallback...\n")
+            return run(fallback, desc)
+        raise
 
 
 def build_parser():
@@ -131,9 +154,15 @@ def main(argv=None):
     diagnostics_path = work / 'diagnostics.json'
     health_path = work / 'health.json'
 
-    # 1. Scrape
-    scrape_cmd = [sys.executable, 'src/cli/scrape.py', '--url', args.url, '--out', str(pages_path), '--maxPages', str(args.maxPages), '--maxDepth', str(args.maxDepth), '--rps', str(args.rps), '--perPageLinkCap', str(args.perPageLinkCap)]
-    run(scrape_cmd, 'scrape')
+    # Startup diagnostic banner (written early so user sees execution context)
+    sys.stderr.write(
+        f"[pipeline] version={getattr(sys.modules.get('__main__'), '__package__', 'n/a')} source_mode={_SOURCE_MODE} output_root={ROOT}\n"
+    )
+
+    # 1. Scrape (module first, legacy fallback only in source mode)
+    scrape_primary = [sys.executable, '-m', 'cli.scrape', '--url', args.url, '--out', str(pages_path), '--maxPages', str(args.maxPages), '--maxDepth', str(args.maxDepth), '--rps', str(args.rps), '--perPageLinkCap', str(args.perPageLinkCap)]
+    scrape_fallback = [sys.executable, 'src/cli/scrape.py', '--url', args.url, '--out', str(pages_path), '--maxPages', str(args.maxPages), '--maxDepth', str(args.maxDepth), '--rps', str(args.rps), '--perPageLinkCap', str(args.perPageLinkCap)] if _SOURCE_MODE else None
+    _invoke(scrape_primary, scrape_fallback, 'scrape')
     # Alias for spec naming (scraped_pages.jsonl) -> duplicate for compatibility
     scraped_alias = work / 'scraped_pages.jsonl'
     try:
@@ -142,7 +171,7 @@ def main(argv=None):
         sys.stderr.write(f"[warn] Failed to create alias scraped_pages.jsonl: {e}\n")
 
     # 2. Extract
-    extract_cmd = [sys.executable, 'src/cli/extract_insights.py', '--pages', str(pages_path), '--out', str(insights_raw_path), '--minInsights', str(args.minInsights), '--maxInsights', str(args.maxInsights), '--minLen', str(args.minLen)]
+    extract_cmd = [sys.executable, '-m', 'cli.extract_insights', '--pages', str(pages_path), '--out', str(insights_raw_path), '--minInsights', str(args.minInsights), '--maxInsights', str(args.maxInsights), '--minLen', str(args.minLen)]
     if args.fuzzyDedupe:
         extract_cmd.append('--fuzzyDedupe')
     if args.minhashFuzzy:
@@ -150,7 +179,7 @@ def main(argv=None):
     run(extract_cmd, 'extract')
 
     # 3. Classify
-    classify_cmd = [sys.executable, 'src/cli/classify.py', '--in', str(insights_raw_path), '--out', str(insights_classified_path)]
+    classify_cmd = [sys.executable, '-m', 'cli.classify', '--in', str(insights_raw_path), '--out', str(insights_classified_path)]
     # map classification flags
     if args.enable_zero_shot: classify_cmd.append('--enable-zero-shot')
     if args.zero_shot_primary: classify_cmd.append('--zero-shot-primary')
@@ -169,13 +198,14 @@ def main(argv=None):
 
     # 4. Diagnostics summary
     # diagnostics_summary expects --pred not --predictions
-    diag_cmd = [sys.executable, 'scripts/diagnostics_summary.py', '--pred', str(insights_classified_path)]
+    # diagnostics_summary lives under scripts/ still; attempt module first, fallback to script path.
+    diag_cmd = [sys.executable, '-m', 'scripts.diagnostics_summary', '--pred', str(insights_classified_path)]
     diagnostics_out = run(diag_cmd, 'diagnostics')
     diagnostics_path.write_text(diagnostics_out, encoding='utf-8')
 
     # 5. Health check (tolerate exit code 1 unless --strict)
     neutral_max = args.maxNeutralPct
-    health_cmd = [sys.executable, 'scripts/check_health.py', '--pred', str(insights_classified_path), '--neutral-max', str(neutral_max), '--min-support', str(args.minRiskPct)]
+    health_cmd = [sys.executable, '-m', 'scripts.check_health', '--pred', str(insights_classified_path), '--neutral-max', str(neutral_max), '--min-support', str(args.minRiskPct)]
     if args.strict:
         health_cmd.append('--strict')
     proc = subprocess.run(health_cmd, capture_output=True, text=True)
@@ -204,7 +234,7 @@ def main(argv=None):
     calibrated_path = None
     if args.calibration:
         calibrated_path = work / 'insights_classified_calibrated.jsonl'
-        apply_cmd = [sys.executable, 'scripts/apply_calibration.py', '--predictions', str(insights_classified_path), '--calibration', args.calibration, '--out', str(calibrated_path)]
+        apply_cmd = [sys.executable, '-m', 'scripts.apply_calibration', '--predictions', str(insights_classified_path), '--calibration', args.calibration, '--out', str(calibrated_path)]
         run(apply_cmd, 'apply_calibration')
 
     summary = {
@@ -222,7 +252,7 @@ def main(argv=None):
     # If validation requested, run after calibration step (so validator sees final artifacts)
     validation_status = None
     if args.validate:
-        validate_cmd = [sys.executable, 'scripts/validate_delivery.py', '--workDir', str(work), '--check-rationale-len', '200', '--strict']
+        validate_cmd = [sys.executable, '-m', 'scripts.validate_delivery', '--workDir', str(work), '--check-rationale-len', '200', '--strict']
         val_proc = subprocess.run(validate_cmd, capture_output=True, text=True)
         try:
             validation_json = json.loads(val_proc.stdout or '{}')
