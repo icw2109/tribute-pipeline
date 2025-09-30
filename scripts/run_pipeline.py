@@ -298,8 +298,28 @@ def main(argv=None):
             print(f"  [{s['label']}] ({s['confidence']}) {s['text']}")
         print('========================\n')
 
-    # Always emit machine-parsable JSON last
+    # Persist summary.json for easier consumption by external tooling
+    try:
+        (work / 'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
+    except Exception as e:  # pragma: no cover
+        sys.stderr.write(f"[warn] could not write summary.json: {e}\n")
+
+    # Always emit machine-parsable JSON last (stdout)
     print(json.dumps(summary, indent=2))
+
+
+def main_all():  # pragma: no cover - convenience wrapper for tribute-e2e
+    """Wrapper entrypoint that behaves like --all was supplied.
+
+    This allows a zero‑thought single command after installation:
+        tribute-e2e --url https://example.com
+    Additional arguments can still override defaults (e.g. --maxPages 80).
+    """
+    # Inject --all if not already present
+    argv = sys.argv[1:]
+    if '--all' not in argv:
+        argv = ['--all'] + argv
+    main(argv)
 
 
 if __name__ == '__main__':  # pragma: no cover

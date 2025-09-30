@@ -33,9 +33,11 @@ dev = ["pytest", "black"]
 tribute-run = "scripts.run_pipeline:main"
 tribute-validate = "scripts.validate_delivery:main"
 tribute-synthetic = "scripts.generate_synthetic_predictions:main"
+tribute-e2e = "scripts.run_pipeline:main_all"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+# Include core source tree plus the top-level 'scripts' package so console entrypoints resolve after pip install.
+where = ["src", "."]
 include = ["*"]
 
 [tool.black]

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install (editable core)
+        run: |
+          pip install --upgrade pip
+          pip install -e .
+
+      - name: Run unit tests (quiet)
+        run: |
+          if [ -f pytest.ini ] || [ -d tests ]; then pytest -q || (echo "Tests failed" && exit 1); fi
+
+      - name: Smoke run (quick docs crawl)
+        run: |
+          tribute-e2e --url https://docs.python.org/3/ --maxPages 12 --maxDepth 1 > smoke_stdout.json
+          echo "Smoke output summary:"; head -n 40 smoke_stdout.json || true
+
+      - name: Verify artifacts
+        run: |
+          latest_dir=$(ls -td out/run_* | head -n1)
+          test -f "$latest_dir/summary.json" || (echo 'Missing summary.json' && exit 1)
+          test -f "$latest_dir/insights_classified.jsonl" || (echo 'Missing insights_classified.jsonl' && exit 1)
+          test -f "$latest_dir/validation.json" || (echo 'Missing validation.json (should exist when --all injected by wrapper)' && exit 1 || true)
+          echo "Artifacts present in $latest_dir"; ls -1 "$latest_dir" | sed 's/^/ - /'
+
+      - name: Archive latest artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-artifacts
+          path: out/run_*/

@@ -1,47 +1,177 @@
-# Tribute Takehome
+# Tribute Pipeline (Take‑Home Solution)
 
-> Quick Start (Single Command)
->
-> 1. Create & activate a virtual environment (PowerShell on Windows):
->    ```powershell
->    python -m venv .venv
->    .\.venv\Scripts\Activate
->    pip install -r requirements.txt
->    ```
-> 2. Run the entire crawl → extract → classify → diagnostics → health → validation pipeline with one command:
->    ```powershell
->    python scripts/run_pipeline.py --url https://example.com --all
->    ```
->    This automatically: creates a timestamped work directory, enables zero‑shot + self‑train + gating features, runs diagnostics, health gate, strict validation, and prints a human summary plus machine JSON.
-> 3. Inspect the generated folder under `out/` (e.g. `out/run_20250101_120301/`). Key artifacts:
->    - `pages.jsonl` (raw crawl)
->    - `insights_raw.jsonl` (extracted insight candidates)
->    - `insights_classified.jsonl` (final labeled insights w/ rationale & confidence)
->    - `diagnostics.json` (label distribution, neutrality ratio, confidence bins)
->    - `health.json` (health gate status: 0=pass, 1=soft warning, 2=fail)
->    - `summary` (printed to console + JSON at end of run)
->    - `run_manifest.json` (reproducibility metadata written by classify)
->
-> Sample final JSON (abridged):
-> ```jsonc
-> {
->   "url": "https://example.com",
->   "records": 87,
->   "label_dist": {"Advantage": 41, "Risk": 29, "Neutral": 17},
->   "neutral_ratio": 0.195,
->   "health_status": 1,
->   "validation_status": "pass",
->   "samples": [
->     {"label": "Risk", "confidence": 0.91, "text": "Operators may be slashed if..."},
->     {"label": "Advantage", "confidence": 0.88, "text": "Protocol offers restaking incentives..."}
->   ]
-> }
-> ```
-> Interpretation: `health_status` 1 = soft distribution warning (run succeeds unless `--strict`); `validation_status` pass means schema & consistency checks succeeded.
->
-> Legacy: `run_all.py` remains for backward compatibility but is superseded by `scripts/run_pipeline.py --all`.
->
-> For multi-seed Eigen demo or granular flags, read on.
+An end‑to‑end deterministic pipeline that: crawls a target domain politely → extracts atomic, investor‑relevant insights → classifies them (Advantage / Risk / Neutral + tags, rationale, confidence) → runs diagnostics, health gating & strict validation → emits reproducible artifacts and a manifest. Designed for clarity, traceability, and easy reviewer reproduction.
+
+---
+## Executive Summary
+| Pillar | Highlights |
+|--------|-----------|
+| Crawl | Deterministic BFS, robots.txt respect, depth & page caps, canonical URL + duplicate suppression |
+| Extraction | Heuristic sentence/bullet mining with metric/risk keyword filtering, merge + evidence retention, dedupe |
+| Classification | Hybrid heuristic + self‑train + optional zero‑shot fusion, rationale templating, PII scrubbing, confidence fusion |
+| Governance | Run manifest (schemaVersion, taxonomyVersion, tag vocab), validation & health gates, deprecation policy |
+| Quality Gates | Diagnostics distribution metrics, neutral ratio, entropy checks, strict schema validator |
+| Reproducibility | Single command `--all`, Dockerfile, `pyproject.toml` console scripts, dependency audit |
+| Observability | Aggregated metrics collector, summarized banner + machine JSON output |
+
+---
+## Table of Contents
+1. [Quick Start](#quick-start)
+2. [Artifact Map](#artifact-map)
+3. [One‑Command Pipeline](#one-command-pipeline)
+4. [Eigen / Multi‑Seed Guidance](#eigen--multi-seed-guidance)
+5. [Validation & Health](#validation--health)
+6. [Metrics Aggregation](#metrics-aggregation)
+7. [Requirements → Implementation Mapping](#requirements--implementation-mapping-spec-coverage)
+8. [Crawler Details](#part-1-crawler)
+9. [Insight Extraction Details](#part-2-insight-extraction)
+10. [Classification Architecture](#classification-strategies-hybrid-low--no-label)
+11. [Labeling & Calibration Workflow](#labeling-module-gold-data-workflow)
+12. [Packaging & Docker](#packaging--installation)
+13. [Deprecations](#deprecations-summary)
+14. [Submission Quick Reference](#submission-quick-reference)
+15. [Roadmap / Future Work](#future-work--roadmap)
+16. [Rubric Mapping](#rubric-mapping)
+
+---
+## Quick Start
+### Easiest (pip install directly from GitHub + single command)
+```powershell
+pip install git+https://github.com/icw2109/tribute-pipeline.git
+tribute-e2e --url https://docs.python.org/3/
+```
+Output directory: printed at end (e.g. `out/run_20250930_140501/`) and contains `summary.json`.
+
+### With optional zero‑shot / embedding extras
+```powershell
+pip install "tribute-pipeline[full] @ git+https://github.com/icw2109/tribute-pipeline.git"
+tribute-e2e --url https://www.eigenlayer.xyz --maxPages 60 --maxDepth 2 --perPageLinkCap 25
+```
+
+### Local editable (development workflow)
+```powershell
+python -m venv .venv
+./.venv/Scripts/Activate
+pip install -e .
+tribute-e2e --url https://docs.python.org/3/
+```
+
+`tribute-e2e` is a convenience wrapper that applies `--all` automatically. Use `tribute-run` if you want to specify individual feature flags.
+
+---
+## Artifact Map
+| File | Stage | Description |
+|------|-------|-------------|
+| pages.jsonl | Crawl | Raw cleaned pages (title, text, depth, discoveredFrom) |
+| scraped_pages.jsonl | Crawl | Alias for spec familiarity (duplicate of pages.jsonl) |
+| insights_raw.jsonl | Extraction | Atomic candidate insights with evidence list |
+| insights_classified.jsonl | Classification | Final labeled insights (label, tag, rationale, confidence) |
+| run_manifest.json | Classification | Repro metadata: taxonomy versions, config, hash |
+| diagnostics.json | Diagnostics | Label distribution, neutral ratio, confidence bins |
+| health.json | Health Gate | Status + reasons (0 pass / 1 warn / 2 fail strict) |
+| validation.json | Validation | Pass/fail + problems/warnings arrays |
+| summary.json (stdout JSON if --all) | Orchestration | Consolidated run summary + samples |
+| metrics.json (optional) | Aggregation | Unified collector output (see collect_metrics) |
+
+---
+## One‑Command Pipeline
+```powershell
+python scripts/run_pipeline.py --url <seed-url> --all [--maxPages 60 --maxDepth 2 --rps 1 --perPageLinkCap 25]
+```
+Add `--strict` only if you want soft health warnings (status 1) to fail the run.
+
+---
+## Eigen / Multi‑Seed Guidance
+If the primary EigenLayer domain yields limited pages (bot heuristics), use the multi‑seed helper:
+```powershell
+python scripts/quick_demo.py --url https://www.eigenlayer.xyz --eigen-mode --maxPages 30 --maxDepth 2 `
+  --browser-headers --ua-rotate "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125 Safari/537.36,Firefox/125.0" `
+  --stealth-jitter 1.5 --pivot-fallback https://lido.fi,https://polkadot.network --minPages 5 --allow-fallback
+```
+Then optionally re‑run the unified pipeline on the main domain for classification diversity. For fine‑grained control, `scripts/multi_seed_scrape.py` enumerates docs/blog subdomains directly.
+
+---
+## Validation & Health
+Run re-validation any time:
+```powershell
+python scripts/validate_delivery.py --workDir out/run_YYYYMMDD_HHMMSS --check-rationale-len 200 --strict
+```
+Health status meanings:
+* 0 Pass (balanced enough)
+* 1 Soft Warning (distribution borderline; run still succeeds unless `--strict`)
+* 2 Fail (strict mode only)
+
+---
+## Metrics Aggregation
+Single run:
+```powershell
+python scripts/collect_metrics.py --workDir out/run_YYYYMMDD_HHMMSS --out metrics.json
+```
+Time series across runs:
+```powershell
+python scripts/collect_metrics.py --glob "out/run_*" --aggregate metrics_timeseries.json
+```
+This merges diagnostics + health + validation + insight counts for dashboards or drift watch.
+
+---
+## Submission Quick Reference
+| Action | Command |
+|--------|---------|
+| End‑to‑end (docs site) | `python scripts/run_pipeline.py --url https://docs.python.org/3/ --all` |
+| End‑to‑end (Eigen) | `python scripts/run_pipeline.py --url https://www.eigenlayer.xyz --all --maxPages 60 --maxDepth 2` |
+| Multi‑seed Eigen helper | See [Eigen / Multi‑Seed Guidance](#eigen--multi-seed-guidance) |
+| Re‑validate | `python scripts/validate_delivery.py --workDir <dir> --check-rationale-len 200 --strict` |
+| Metrics collect | `python scripts/collect_metrics.py --workDir <dir> --out metrics.json` |
+| Synthetic health gate demo | `python scripts/generate_synthetic_predictions.py --out synth.jsonl --per-class 40` then `python scripts/ci_health_gate.py --pred synth.jsonl --strict` |
+
+---
+## Future Work / Roadmap
+* CI workflow: test + small pipeline smoke + metrics publish
+* Optional fuzzy similarity dedupe (MinHash / embedding) in extraction
+* Active learning queue integration with annotation UI
+* Richer calibration (isotonic) once gold data is collected
+* Notebook metrics dashboard (timeseries of neutral ratio / label entropy)
+* Removal of deprecated `run_all.py` in v0.3.0
+
+---
+## Rubric Mapping
+| Evaluation Criterion | Implementation Evidence | Files / Commands | Status |
+|----------------------|-------------------------|------------------|--------|
+| Scraper correctness (depth-2, dedup, rate-limit, robots) | Deterministic BFS, canonical URL set, RPS throttle, robots guards | `src/core/crawl.py`, `src/core/robots.py`, `src/core/urlnorm.py`, `src/cli/scrape.py` | ✅ |
+| Insight quality (atomic, investor-useful, concise) | Sentence/bullet split, metric/risk filters, merge + evidence, length guard | `src/core/insight_extract.py`, `insights_raw.jsonl` | ✅ |
+| Classification quality (architecture & calibration readiness) | Heuristic + self-train + optional zero-shot; confidence fusion; calibration script | `src/cli/classify.py`, `scripts/apply_calibration.py`, `insights_classified.jsonl` | ✅ (needs gold for actual F1) |
+| Simplicity / clarity (minimal deps, reproducible) | Core deps only (requests, bs4, lxml, sklearn, numpy, tqdm); single-command `--all`; manifest | `pyproject.toml`, `scripts/run_pipeline.py`, `run_manifest.json` | ✅ |
+| Responsible scraping (ethics & compliance) | Robots respect, depth & page caps, per-page link cap, RPS limit, deterministic no concurrency | `crawl.py`, CLI flags (`--maxPages`, `--maxDepth`, `--rps`, `--perPageLinkCap`) | ✅ |
+| Governance & validation (added value) | Structural + semantic validator, health gate, diagnostics summary | `scripts/validate_delivery.py`, `scripts/check_health.py`, `diagnostics.json` | ✅ |
+| Reproducibility & observability | Manifest, metrics collector, deterministic ordering, summarized stdout + JSON | `run_manifest.json`, `scripts/collect_metrics.py` | ✅ |
+| Packaging & deployment readiness | Editable install, console scripts, Dockerfile | `pyproject.toml`, `Dockerfile` | ✅ |
+| Deprecation discipline | Formal plan + runtime warning, phased removal schedule | `docs/DEPRECATIONS.md`, `run_all.py` | ✅ |
+| Calibration & future evaluation | Temperature scaling support + evaluation pipeline scaffolding | `scripts/apply_calibration.py`, labeling scripts | ✅ |
+
+Macro F1 target: requires external labeled test set; framework present, metric intentionally not fabricated.
+
+---
+> Deprecation: `run_all.py` remains for backward compatibility but is superseded by `scripts/run_pipeline.py --all` and will be removed (target: 0.3.0). See `docs/DEPRECATIONS.md`.
+
+---
+Sample final JSON summary (abridged):
+```jsonc
+{
+  "url": "https://www.eigenlayer.xyz",
+  "records": 114,
+  "label_dist": {"Advantage": 55, "Risk": 46, "Neutral": 13},
+  "neutral_ratio": 0.114,
+  "health_status": 0,
+  "validation_status": "pass",
+  "insight_count": 108,
+  "samples": [
+    {"label": "Risk", "confidence": 0.64, "text": "Slashing penalties apply if ..."},
+    {"label": "Advantage", "confidence": 0.72, "text": "Restaking extends economic security ..."}
+  ]
+}
+```
+
+---
 
 Two clearly separated phases:
 
@@ -369,6 +499,17 @@ python src/cli/insights.py scraped_pages.jsonl insights_raw.jsonl --min 50 --max
 
 ---
 All parts now separated: Part 1 (crawler) in `core/`, Part 2 (insights) in `insights/`.
+
+---
+## Deprecations Summary
+Referenced earlier; concise recap:
+| Item | Status | Target Removal |
+|------|--------|----------------|
+| run_all.py | Deprecated (warning emitted) | v0.3.0 |
+| Legacy orchestration duplication | Consolidated into `run_pipeline.py` | Complete |
+| Future experimental scripts | Will be evaluated & folded | Ongoing |
+See `docs/DEPRECATIONS.md` for risks, phases, and policy.
+
 
 ## Insight Extraction (Phase 2)
 
