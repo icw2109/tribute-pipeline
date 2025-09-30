@@ -610,7 +610,7 @@ models/selftrain/
   calibration.json     # (optional) temperature + ECE
 ```
 
-### 3. Zero-Shot NLI Fallback (Optional)
+### 3. Zero-Shot NLI Fallback (Use as fall back for speed, I often fast methods to eliminate chunks of work and then fallback to slower / more expensive/sophisticated models)
 For low-confidence cases, a zero-shot entailment model (e.g. `facebook/bart-large-mnli`) can re-score Risk / Advantage / Neutral hypotheses. This requires `transformers` installed; if absent, a stub returns Neutral.
 
 Install (optional):
