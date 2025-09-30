@@ -120,6 +120,32 @@ python scripts/collect_metrics.py --glob "out/run_*" --aggregate metrics_timeser
 This merges diagnostics + health + validation + insight counts for dashboards or drift watch.
 
 ---
+## Lines of Code Analysis
+Count lines of code in the repository with detailed breakdowns:
+```powershell
+# Basic summary
+python scripts/count_loc.py
+
+# JSON output
+python scripts/count_loc.py --json
+
+# Detailed file breakdown (top 20 files)
+python scripts/count_loc.py --detail
+
+# Include documentation files
+python scripts/count_loc.py --include-docs
+
+# Count specific file types
+python scripts/count_loc.py --extensions .py,.js,.java
+```
+
+**Summary (Python code only):**
+- **Total Lines:** ~10,936
+- **Code Lines:** ~9,114 (excluding comments and blanks)
+- **Files:** 118
+- **Breakdown:** src/ (6,674 lines), scripts/ (3,011 lines), tests/ (1,083 lines)
+
+---
 ## Submission Quick Reference
 | Action | Command |
 |--------|---------|
@@ -128,6 +154,7 @@ This merges diagnostics + health + validation + insight counts for dashboards or
 | Multi‑seed Eigen helper | See [Eigen / Multi‑Seed Guidance](#eigen--multi-seed-guidance) |
 | Re‑validate | `python scripts/validate_delivery.py --workDir <dir> --check-rationale-len 200 --strict` |
 | Metrics collect | `python scripts/collect_metrics.py --workDir <dir> --out metrics.json` |
+| Lines of code count | `python scripts/count_loc.py` or `python scripts/count_loc.py --detail` |
 | Synthetic health gate demo | `python scripts/generate_synthetic_predictions.py --out synth.jsonl --per-class 40` then `python scripts/ci_health_gate.py --pred synth.jsonl --strict` |
 
 ---
