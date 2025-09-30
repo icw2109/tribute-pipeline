@@ -15,6 +15,27 @@ An end‑to‑end pipeline that: crawls a target domain politely → extracts at
 | Observability | Aggregated metrics collector, summarized banner + machine JSON output |
 
 ---
+## Code Statistics
+
+The tribute-pipeline codebase consists of approximately **9,224 lines of Python code** across 118 files:
+
+| Category | Files | Lines of Code |
+|----------|-------|---------------|
+| src/     | 59    | 5,682         |
+| scripts/ | 25    | 2,580         |
+| tests/   | 32    | 826           |
+| Total    | 118   | **9,224**     |
+
+Full repository statistics (all languages): **~11,000 lines of code** including Markdown documentation, JSON configuration, YAML workflows, and other assets.
+
+To view current statistics:
+```powershell
+tribute-loc                    # Summary view
+tribute-loc --detailed         # File-by-file breakdown
+tribute-loc --json             # Machine-readable output
+```
+
+---
 ## Table of Contents
 1. [Quick Start](#quick-start)
 2. [Artifact Map](#artifact-map)
@@ -753,6 +774,9 @@ Console scripts provided after install:
 tribute-run --url https://example.com --all
 tribute-validate --workDir out/run_20250101_120301 --strict
 tribute-synthetic --out synthetic.jsonl --per-class 30
+tribute-loc                                        # Show LOC statistics
+tribute-loc --detailed                             # Show file-by-file breakdown
+tribute-loc --json                                 # JSON output for automation
 ```
 For full (zero-shot + embeddings) dependencies:
 ```powershell

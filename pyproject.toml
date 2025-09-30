@@ -40,6 +40,7 @@ tribute-e2e = "src.inprocess_runner:main_all"
 tribute-validate = "scripts.validate_delivery:main"
 tribute-synthetic = "scripts.generate_synthetic_predictions:main"
 tribute-selfcheck = "src.selfcheck:main"
+tribute-loc = "scripts.count_loc:main"
 
 [tool.setuptools.packages.find]
 # Include core source tree plus the top-level 'scripts' package so console entrypoints resolve after pip install.
