@@ -25,6 +25,17 @@ All notable changes to this project will be documented here. Follow [Keep a Chan
 ### Internal
 - Defensive helper `_invoke` consolidates subprocess logic & doubles logging in failure path.
 
+## [0.1.4] - 2025-09-30
+### Added
+- Pure in-process runner (`inprocess_runner.py`) eliminating all subprocess/relative path dependencies.
+- `tribute-selfcheck` console script to report installed version, module resolution, and quick pipeline readiness.
+### Changed
+- Console scripts `tribute-run` / `tribute-e2e` now point to in-process implementation.
+### Fixed
+- Persistent installation mismatch issues caused by stale script invocation no longer affect main entrypoints.
+### Migration Notes
+- Legacy `scripts/run_pipeline.py` retained for backward compatibility but is no longer the code path for packaged entrypoints.
+
 ## [0.1.1] - 2025-09-30
 ### Fixed
 - Installed console script (`tribute-e2e` / `tribute-run`) failed invoking `src/cli/*.py` paths outside a source checkout. Switched all stage invocations to module form (`-m cli.scrape`, `-m cli.extract_insights`, `-m cli.classify`, etc.) with fallback for source tree. Auto workDir now rooted at the invoking CWD (not the site-packages install path) when running from an installed wheel.
