@@ -2,6 +2,17 @@
 
 An end‑to‑end deterministic pipeline that: crawls a target domain politely → extracts atomic, investor‑relevant insights → classifies them (Advantage / Risk / Neutral + tags, rationale, confidence) → runs diagnostics, health gating & strict validation → emits reproducible artifacts and a manifest. Designed for clarity, traceability, and easy reviewer reproduction.
 
+<!-- Final E2E Run (added) -->
+> Latest validated end‑to‑end run (self‑train + zero‑shot enabled) against `https://blog.eigencloud.xyz` produced 113 insights: Advantage 60 | Risk 40 | Neutral 13 (neutral ratio 0.115, health status 0). Reproduce with:
+> ```powershell
+> pip install --no-cache-dir "tribute-pipeline[full] @ git+https://github.com/icw2109/tribute-pipeline.git@v0.1.5"
+> tribute-e2e --url https://blog.eigencloud.xyz --maxPages 40 --maxDepth 2 --perPageLinkCap 25 --all
+> ```
+> Self-train model is auto-discovered from `models/*` if not specified via `--model`. For provenance distribution & confidence stats run:
+> ```powershell
+> python scripts/analyze_provenance.py --workDir <runDir> --reclassify --sample 150 --debugOut <runDir>/insights_classified_debug.jsonl
+> ```
+
 ---
 ## Executive Summary
 | Pillar | Highlights |
@@ -579,9 +590,6 @@ Emits a small JSON stats object, e.g.:
 | Evidence robustness | Store char spans in original text |
 
 ---
-Next natural step: add category tagging + fuzzy dedupe to refine insight quality.
-
----
 ## Classification Strategies (Hybrid, Low / No Label)
 
 The project now supports a layered classification approach optimized for early phases without human gold labels.
@@ -619,12 +627,13 @@ pip install transformers torch --upgrade
 ```
 
 ### 4. Ensemble Routing
-Decision flow:
-1. Heuristic classify → if `ruleStrength >= ruleStrongThreshold` accept.
-2. Else self-train model prediction.
-3. If model top probability < `modelFloor` OR (predicted Neutral & weak ruleStrength) and zero-shot enabled → run NLI fallback.
+Decision flow (current defaults tuned for higher model engagement):
+1. Heuristic classify → if `ruleStrength >= strong_rule_threshold` (now 0.40) accept.
+2. Else self-train model prediction (if a model directory is found or provided).
+3. If model top probability < `model_floor` (0.55) OR (predicted Neutral & weak ruleStrength) and zero-shot enabled → run NLI fallback.
+4. Confidence fusion applies a minimum soft floor (`confidence_min_floor`=0.15) when at least one evidence source supports the label to avoid unreadably tiny confidences.
 
-CLI:
+CLI (legacy ensemble script example):
 ```bash
 python src/cli/ensemble_classify.py \
   --in data/eigenlayer.insights.enriched.jsonl \
@@ -648,8 +657,11 @@ Output augmentation fields:
 | classificationProvenance | Ordered list of stages executed |
 
 ### Configuration Notes
-- Adjust thresholds to tune precision/recall trade-offs.
-- Lower `--minRuleStrength` during self-train to increase recall; monitor noise.
+- strong_rule_threshold lowered to 0.40 (was 0.75) to route more uncertain cases into model / zero-shot layers.
+- confidence_min_floor (0.15) raises ultra-low fused confidences when at least one method fires (improves readability & downstream gating).
+- Automatic self-train model discovery: if you run the in-process runner without `--model`, it will look under `models/*` for the most recently modified directory containing `model.pkl` + `vectorizer.pkl`.
+- To train a fresh pseudo-label model, run the self-train CLI then rerun the pipeline; discovery will pick it up automatically unless you specify `--model`.
+- Adjust thresholds to tune precision/recall trade-offs; lower `--minRuleStrength` during self-train to increase recall (monitor noise).
 - Re-train easily after taxonomy updates; artifacts store taxonomy version.
 
 ### Future Extensions
@@ -658,6 +670,7 @@ Output augmentation fields:
 - Advanced calibration (isotonic / Platt) when gold labels become available.
 
 ### Confidence & Debug Additions
+Additional debug fields now include `confidence_min_floor` in the serialized config to make provenance of post-fusion adjustments transparent.
 - `finalConfidence`: Combined max(ruleStrength, modelTopProb) with optional +0.1 bounded NLI agreement boost.
 - `--debug --explainTopK K` on `ensemble_classify` adds `topFeatures` (feature:weight pairs) for traceability.
 
@@ -688,17 +701,17 @@ Outputs JSON with bin counts and average confidence for monitoring drift.
 | Dev | Testing / formatting | pytest, black |
 
 Install core only:
-```bash
+```powershell
 pip install requests beautifulsoup4 lxml tqdm numpy scikit-learn
 ```
 
 Full stack:
-```bash
+```powershell
 pip install -r requirements.txt
 ```
 
 Environment verification:
-```bash
+```powershell
 python scripts/env_check.py
 ```
 If `activeVenv` is `UNKNOWN`, re-activate (PowerShell):
