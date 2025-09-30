@@ -1,0 +1,4 @@
+#!/usr/bin/env python
+import runpy, sys, pathlib
+sys.argv[0] = 'classify'
+runpy.run_path(str(pathlib.Path(__file__).parent.parent / 'src' / 'cli' / 'classify.py'), run_name='__main__')

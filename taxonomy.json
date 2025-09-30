@@ -1,0 +1,45 @@
+{
+  "version": "v1.0-draft",
+  "createdAt": "2025-09-29T00:00:00Z",
+  "classes": [
+    {
+      "name": "Advantage",
+      "definition": "A statement highlighting a benefit, strength, or positive differentiator of the protocol or system.",
+      "positiveCues": ["improves", "enables", "efficient", "scales", "allows"],
+      "exclusions": ["contains inherent risk", "future roadmap"],
+      "examples": [
+        "Restaking enables reuse of staked capital across multiple services.",
+        "The design reduces capital fragmentation for validators."
+      ],
+      "counterExamples": [
+        "Q3 2025 we will add support for new modules." ,
+        "Slashing events may cause loss of principal." ]
+    },
+    {
+      "name": "Risk",
+      "definition": "A statement describing a potential or realized negative outcome, vulnerability, penalty or uncertainty.",
+      "positiveCues": ["risk", "attack", "slashing", "penalty", "uncertain", "exploit"],
+      "exclusions": ["purely hypothetical with no protocol linkage"],
+      "examples": ["Operators face slashing if they fail to provide committed services."],
+      "counterExamples": ["Validators earn rewards for securing multiple networks."]
+    },
+    {
+      "name": "Neutral",
+      "definition": "Informational or descriptive content that is neither clearly Advantage nor Risk.",
+      "positiveCues": ["is", "provides", "supports", "consists of"],
+      "exclusions": ["value judgement", "risk language"],
+      "examples": ["EigenLayer allows operators to register services."],
+      "counterExamples": ["Restaking significantly lowers capital costs."]
+    }
+  ],
+  "labelingGuidelines": {
+    "disambiguation": [
+      "If both benefit and potential downside appear, classify as Risk only if downside is substantive and central.",
+      "Mechanistic descriptions without value judgement => Neutral.",
+      "Marketing adjectives without factual claim => Discard (do not label)."
+    ],
+    "multiSentence": "If two short sentences form one atomic claim, merge; otherwise split and label separately.",
+    "priority": "Risk overrides Advantage when both are equally central.",
+    "provenanceField": "provenance (scraped|synthetic|weak|augmented) must be tracked outside test set."
+  }
+}

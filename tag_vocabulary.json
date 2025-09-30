@@ -1,0 +1,22 @@
+{
+  "version": "v1",
+  "allowed": [
+    "Enterprise Adoption",
+    "Regulatory Exposure",
+    "Customer Satisfaction",
+    "Capital Efficiency",
+    "Product Velocity",
+    "Technical Debt",
+    "Competitive Moat",
+    "Churn Indicator",
+    "Revenue Growth",
+    "Platform Dependence",
+    "Security Risk",
+    "Tokenomics",
+    "Scalability",
+    "Governance",
+    "Operational Risk",
+    "Cost Optimization",
+    "Other"
+  ]
+}

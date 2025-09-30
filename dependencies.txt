@@ -1,0 +1,29 @@
+# Dependency Audit Summary
+# Generated from workspace import analysis.
+
+[core]
+requests
+beautifulsoup4
+lxml
+tqdm
+numpy
+scikit-learn
+joblib  # transitively used (model persistence). Usually comes with scikit-learn but listed explicitly.
+
+[optional-full]
+# Enable semantic / zero-shot features
+sentence-transformers
+torch
+transformers
+scipy  # required by some torch / transformers ops & sklearn dependencies
+
+[dev]
+pytest
+black
+
+[notes]
+- scipy appears via sklearn or advanced model features; explicitly list under optional/full to avoid heavier install for minimal crawl+heuristic runs.
+- joblib is often installed with scikit-learn; added explicitly for clarity.
+- If minimal footprint desired: pip install requests beautifulsoup4 lxml tqdm numpy scikit-learn
+- For full feature set (zero-shot + embeddings): pip install -e .[full]
+- Development extras could be added to pyproject optional-dependencies as: dev = ["pytest", "black"] (already present).

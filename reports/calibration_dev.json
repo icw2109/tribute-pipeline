@@ -1,0 +1,68 @@
+{
+  "samples": 3,
+  "bins": 10,
+  "temperature": 7.5,
+  "ece": 0.5259,
+  "bins_data": [
+    {
+      "bin": 0,
+      "count": 0,
+      "confidence": null,
+      "accuracy": null
+    },
+    {
+      "bin": 1,
+      "count": 0,
+      "confidence": null,
+      "accuracy": null
+    },
+    {
+      "bin": 2,
+      "count": 0,
+      "confidence": null,
+      "accuracy": null
+    },
+    {
+      "bin": 3,
+      "count": 0,
+      "confidence": null,
+      "accuracy": null
+    },
+    {
+      "bin": 4,
+      "count": 1,
+      "confidence": 0.491,
+      "accuracy": 0.0
+    },
+    {
+      "bin": 5,
+      "count": 1,
+      "confidence": 0.599,
+      "accuracy": 1.0
+    },
+    {
+      "bin": 6,
+      "count": 1,
+      "confidence": 0.686,
+      "accuracy": 0.0
+    },
+    {
+      "bin": 7,
+      "count": 0,
+      "confidence": null,
+      "accuracy": null
+    },
+    {
+      "bin": 8,
+      "count": 0,
+      "confidence": null,
+      "accuracy": null
+    },
+    {
+      "bin": 9,
+      "count": 0,
+      "confidence": null,
+      "accuracy": null
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "train_size": 8,
+  "dev_size": 2,
+  "class_distribution": {
+    "Risk": 4,
+    "Neutral": 2,
+    "Advantage": 2
+  },
+  "macro_f1_dev": 0.333,
+  "per_class_dev": {
+    "Advantage": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "Risk": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0
+    },
+    "Neutral": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0
+    }
+  },
+  "train_seconds": 0.089,
+  "saved_at": 1759166954.827008,
+  "lexicon_hash": "fdc973011f2226f9",
+  "backend": "tfidf"
+}

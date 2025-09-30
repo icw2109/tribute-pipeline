@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tribute-pipeline"
+version = "0.1.0"
+description = "Deterministic crawl → insight extraction → classification pipeline with health/validation"
+authors = [{name = "Your Name", email = "you@example.com"}]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+keywords = ["crawl","classification","insights","pipeline"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+dependencies = [
+  "requests",
+  "beautifulsoup4",
+  "lxml",
+  "tqdm",
+  "numpy",
+  "scikit-learn"
+]
+
+[project.optional-dependencies]
+full = ["sentence-transformers", "torch", "transformers"]
+dev = ["pytest", "black"]
+
+[project.scripts]
+tribute-run = "scripts.run_pipeline:main"
+tribute-validate = "scripts.validate_delivery:main"
+tribute-synthetic = "scripts.generate_synthetic_predictions:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
+
+[tool.black]
+line-length = 100

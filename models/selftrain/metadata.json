@@ -1,0 +1,13 @@
+{
+  "taxonomyVersion": "adin.v2",
+  "labelSet": [
+    "Risk",
+    "Advantage",
+    "Neutral"
+  ],
+  "pseudoSamples": 28,
+  "minRuleStrength": 0.5,
+  "calibrated": true,
+  "temperature": 0.5,
+  "ece": 0.40199795594907484
+}

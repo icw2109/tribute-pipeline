@@ -1,0 +1,16 @@
+{
+  "strong_rule_threshold": 0.75,
+  "model_floor": 0.55,
+  "enable_self_train": true,
+  "enable_zero_shot": false,
+  "zero_shot_model": "facebook/bart-large-mnli",
+  "zero_shot_primary": false,
+  "risk_override_threshold": 0.55,
+  "enable_margin_gating": false,
+  "margin_threshold": 0.15,
+  "enable_conflict_dampener": false,
+  "conflict_dampener": 0.05,
+  "enable_provisional_risk": false,
+  "rationale_limit": 180,
+  "debug": false
+}

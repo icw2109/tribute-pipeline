@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-09-29T23:18:42.471099Z",
+  "records": 3,
+  "output": "C:\\Users\\PC Owner\\Desktop\\tribute-takehome\\tmp_out.jsonl",
+  "config": {
+    "strong_rule_threshold": 0.75,
+    "model_floor": 0.55,
+    "enable_self_train": true,
+    "enable_zero_shot": true,
+    "zero_shot_model": "facebook/bart-large-mnli",
+    "zero_shot_primary": false,
+    "risk_override_threshold": 0.55,
+    "enable_margin_gating": false,
+    "margin_threshold": 0.15,
+    "enable_conflict_dampener": false,
+    "conflict_dampener": 0.05,
+    "enable_provisional_risk": false,
+    "rationale_limit": 180,
+    "debug": false
+  },
+  "schemaVersion": "1.0",
+  "taxonomyVersion": "v1.0-draft",
+  "python": "3.12.7",
+  "platform": "Windows-11-10.0.26100-SP0",
+  "command": "src/cli/classify.py --in tmp_sample.jsonl --out tmp_out.jsonl --enable-zero-shot",
+  "outputSizeBytes": 792,
+  "outputHeadHash": "3da9b8f58e32ea897e9d1bf6a0c170ae0842bbdc1178a6b2c5c06ada296bbf1e"
+}

@@ -1,0 +1,286 @@
+{
+  "best_macro": {
+    "macro_f1": 0.222,
+    "risk_recall": 0.0,
+    "per_class": {
+      "Advantage": {
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.667
+      },
+      "Risk": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0
+      },
+      "Neutral": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0
+      }
+    },
+    "confusion_matrix": {
+      "Advantage": {
+        "Advantage": 1,
+        "Risk": 0,
+        "Neutral": 0
+      },
+      "Risk": {
+        "Advantage": 1,
+        "Risk": 0,
+        "Neutral": 0
+      },
+      "Neutral": {
+        "Advantage": 0,
+        "Risk": 1,
+        "Neutral": 0
+      }
+    },
+    "risk_threshold": 0.4,
+    "adv_threshold": 0.5
+  },
+  "top_macro": [
+    {
+      "macro_f1": 0.222,
+      "risk_recall": 0.0,
+      "per_class": {
+        "Advantage": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.667
+        },
+        "Risk": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0
+        },
+        "Neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0
+        }
+      },
+      "confusion_matrix": {
+        "Advantage": {
+          "Advantage": 1,
+          "Risk": 0,
+          "Neutral": 0
+        },
+        "Risk": {
+          "Advantage": 1,
+          "Risk": 0,
+          "Neutral": 0
+        },
+        "Neutral": {
+          "Advantage": 0,
+          "Risk": 1,
+          "Neutral": 0
+        }
+      },
+      "risk_threshold": 0.4,
+      "adv_threshold": 0.5
+    },
+    {
+      "macro_f1": 0.222,
+      "risk_recall": 0.0,
+      "per_class": {
+        "Advantage": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.667
+        },
+        "Risk": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0
+        },
+        "Neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0
+        }
+      },
+      "confusion_matrix": {
+        "Advantage": {
+          "Advantage": 1,
+          "Risk": 0,
+          "Neutral": 0
+        },
+        "Risk": {
+          "Advantage": 1,
+          "Risk": 0,
+          "Neutral": 0
+        },
+        "Neutral": {
+          "Advantage": 0,
+          "Risk": 1,
+          "Neutral": 0
+        }
+      },
+      "risk_threshold": 0.4,
+      "adv_threshold": 0.6
+    },
+    {
+      "macro_f1": 0.222,
+      "risk_recall": 0.0,
+      "per_class": {
+        "Advantage": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.667
+        },
+        "Risk": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0
+        },
+        "Neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0
+        }
+      },
+      "confusion_matrix": {
+        "Advantage": {
+          "Advantage": 1,
+          "Risk": 0,
+          "Neutral": 0
+        },
+        "Risk": {
+          "Advantage": 1,
+          "Risk": 0,
+          "Neutral": 0
+        },
+        "Neutral": {
+          "Advantage": 0,
+          "Risk": 1,
+          "Neutral": 0
+        }
+      },
+      "risk_threshold": 0.4,
+      "adv_threshold": 0.7
+    },
+    {
+      "macro_f1": 0.222,
+      "risk_recall": 0.0,
+      "per_class": {
+        "Advantage": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.667
+        },
+        "Risk": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0
+        },
+        "Neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0
+        }
+      },
+      "confusion_matrix": {
+        "Advantage": {
+          "Advantage": 1,
+          "Risk": 0,
+          "Neutral": 0
+        },
+        "Risk": {
+          "Advantage": 1,
+          "Risk": 0,
+          "Neutral": 0
+        },
+        "Neutral": {
+          "Advantage": 0,
+          "Risk": 1,
+          "Neutral": 0
+        }
+      },
+      "risk_threshold": 0.4,
+      "adv_threshold": 0.8
+    },
+    {
+      "macro_f1": 0.222,
+      "risk_recall": 0.0,
+      "per_class": {
+        "Advantage": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.667
+        },
+        "Risk": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0
+        },
+        "Neutral": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0
+        }
+      },
+      "confusion_matrix": {
+        "Advantage": {
+          "Advantage": 1,
+          "Risk": 0,
+          "Neutral": 0
+        },
+        "Risk": {
+          "Advantage": 1,
+          "Risk": 0,
+          "Neutral": 0
+        },
+        "Neutral": {
+          "Advantage": 0,
+          "Risk": 1,
+          "Neutral": 0
+        }
+      },
+      "risk_threshold": 0.5,
+      "adv_threshold": 0.5
+    }
+  ],
+  "best_risk_recall": {
+    "macro_f1": 0.222,
+    "risk_recall": 0.0,
+    "per_class": {
+      "Advantage": {
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.667
+      },
+      "Risk": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0
+      },
+      "Neutral": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0
+      }
+    },
+    "confusion_matrix": {
+      "Advantage": {
+        "Advantage": 1,
+        "Risk": 0,
+        "Neutral": 0
+      },
+      "Risk": {
+        "Advantage": 1,
+        "Risk": 0,
+        "Neutral": 0
+      },
+      "Neutral": {
+        "Advantage": 0,
+        "Risk": 1,
+        "Neutral": 0
+      }
+    },
+    "risk_threshold": 0.4,
+    "adv_threshold": 0.5
+  },
+  "floor_macro_f1": 0.1998,
+  "total_evals": 24
+}
