@@ -1,6 +1,6 @@
 # Tribute Pipeline (Take‑Home Solution)
 
-An end‑to‑end deterministic pipeline that: crawls a target domain politely → extracts atomic, investor‑relevant insights → classifies them (Advantage / Risk / Neutral + tags, rationale, confidence) → runs diagnostics, health gating & strict validation → emits reproducible artifacts and a manifest. Designed for clarity, traceability, and easy reviewer reproduction.
+An end‑to‑end pipeline that: crawls a target domain politely → extracts atomic, investor‑relevant insights → classifies them (Advantage / Risk / Neutral + tags, rationale, confidence) → runs diagnostics, health gating & strict validation → emits reproducible artifacts and a manifest. Designed for clarity, traceability, and easy reviewer reproduction.
 
 ---
 ## Executive Summary
