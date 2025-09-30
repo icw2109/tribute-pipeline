@@ -35,28 +35,34 @@ An end‑to‑end deterministic pipeline that: crawls a target domain politely �
 
 ---
 ## Quick Start
-### Easiest (pip install directly from GitHub + single command)
+
+Copy & paste (full feature demo on Eigen blog/docs):
+```powershell
+pip install --no-cache-dir "tribute-pipeline[full] @ git+https://github.com/icw2109/tribute-pipeline.git@v0.1.5"
+tribute-e2e --url https://blog.eigencloud.xyz --maxPages 40 --maxDepth 2 --perPageLinkCap 25 --all
+```
+Artifacts appear under an auto timestamped `out/run_YYYYMMDD_HHMMSS/` directory:
+pages.jsonl, insights_raw.jsonl, insights_classified.jsonl, run_manifest.json, diagnostics.json, health.json, validation.json, summary.json.
+
+Minimal docs-only alternative (lighter install):
 ```powershell
 pip install git+https://github.com/icw2109/tribute-pipeline.git
 tribute-e2e --url https://docs.python.org/3/
 ```
-Output directory: printed at end (e.g. `out/run_20250930_140501/`) and contains `summary.json`.
 
-### With optional zero‑shot / embedding extras
+Need a fixed directory name or to tweak features? Use `tribute-run`:
 ```powershell
-pip install "tribute-pipeline[full] @ git+https://github.com/icw2109/tribute-pipeline.git"
-tribute-e2e --url https://www.eigenlayer.xyz --maxPages 60 --maxDepth 2 --perPageLinkCap 25
+tribute-run --url https://blog.eigencloud.xyz --workDir out/eigen_demo --maxPages 40 --maxDepth 2 --perPageLinkCap 25
 ```
 
-### Local editable (development workflow)
-```powershell
-python -m venv .venv
-./.venv/Scripts/Activate
-pip install -e .
-tribute-e2e --url https://docs.python.org/3/
-```
+Troubleshooting:
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `ModuleNotFoundError: No module named 'inprocess_runner'` | Older tag (≤0.1.4) bad console script path | Upgrade to 0.1.5: `pip install --no-cache-dir --upgrade "tribute-pipeline @ git+https://github.com/icw2109/tribute-pipeline.git@v0.1.5"` |
+| `ModuleNotFoundError: No module named 'selfcheck'` | Same as above | Same upgrade command |
+| Zero-shot model download slow | First HF model pull | Re-run; or drop extras: install without `[full]` |
+| Empty insights file | Crawl blocked / too strict filters | Increase `--maxPages`, check stats, relax min filters |
 
-`tribute-e2e` is a convenience wrapper that applies `--all` automatically. Use `tribute-run` if you want to specify individual feature flags.
 
 ---
 ## Artifact Map
