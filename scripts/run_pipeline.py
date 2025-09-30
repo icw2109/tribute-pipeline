@@ -101,6 +101,7 @@ def build_parser():
     p.add_argument('--enable-conflict-dampener', action='store_true')
     p.add_argument('--enable-provisional-risk', action='store_true')
     p.add_argument('--enable-self-train', action='store_true')
+    p.add_argument('--model', help='Path to self-train model directory (model.pkl & vectorizer.pkl)')
     p.add_argument('--strong-threshold', type=float)
     p.add_argument('--risk-override-threshold', type=float)
     p.add_argument('--margin-threshold', type=float)
@@ -187,6 +188,7 @@ def main(argv=None):
     if args.enable_conflict_dampener: classify_cmd.append('--enable-conflict-dampener')
     if args.enable_provisional_risk: classify_cmd.append('--enable-provisional-risk')
     if args.enable_self_train: classify_cmd.append('--enable-self-train')
+    if args.model: classify_cmd += ['--model', args.model]
     if args.strong_threshold is not None: classify_cmd += ['--strong', str(args.strong_threshold)]
     if args.risk_override_threshold is not None: classify_cmd += ['--risk-override-threshold', str(args.risk_override_threshold)]
     if args.margin_threshold is not None: classify_cmd += ['--margin-threshold', str(args.margin_threshold)]

@@ -22,7 +22,12 @@ Outputs: workDir/summary.json plus the standard pipeline artifacts.
 Exit code: non-zero if pipeline or validation fails (strict health failures propagate).
 """
 from __future__ import annotations
-import argparse, json, subprocess, sys, datetime
+import argparse, json, subprocess, sys, datetime, warnings
+try:
+    from scripts.deprecation import emit_deprecation
+except Exception:  # pragma: no cover - fallback if helper missing
+    def emit_deprecation(thing, replacement, removal_version):  # type: ignore
+        warnings.warn(f"{thing} is deprecated; use {replacement}; removal in {removal_version}", DeprecationWarning, stacklevel=2)
 from pathlib import Path
 
 PY = sys.executable
@@ -59,6 +64,9 @@ def build_parser():
 def main(argv=None):
     ap = build_parser()
     a = ap.parse_args(argv)
+
+    # Runtime deprecation warning (standardized)
+    emit_deprecation('run_all.py', 'python scripts/run_pipeline.py --url <seed> --all', '0.3.0')
 
     if a.workDir:
         work = Path(a.workDir)

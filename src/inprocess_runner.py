@@ -57,6 +57,7 @@ def run_pipeline(
     conflict_dampener: float | None = None,
     model_floor: float | None = None,
     zero_shot_model: str | None = None,
+    self_train_model_path: str | None = None,
     strict_health: bool = False,
     max_neutral_pct: float = 0.92,
     min_risk_pct: float = 0.01,
@@ -116,7 +117,40 @@ def run_pipeline(
     if conflict_dampener is not None: pipe_cfg_kwargs['conflict_dampener'] = conflict_dampener
     if model_floor is not None: pipe_cfg_kwargs['model_floor'] = model_floor
     if zero_shot_model is not None: pipe_cfg_kwargs['zero_shot_model'] = zero_shot_model
-    pipeline = ClassifierPipeline(PipelineConfig(**pipe_cfg_kwargs), self_train_model_path=None)
+    # Resolve self-train model path if provided
+    def _discover_self_train_model() -> str | None:
+        """Find a candidate self-train model directory under ./models/* containing required artifacts.
+        Returns latest modified directory path or None."""
+        root = Path('models')
+        if not root.exists():
+            return None
+        candidates = []
+        for d in root.iterdir():
+            if not d.is_dir():
+                continue
+            if (d/'model.pkl').exists() and (d/'vectorizer.pkl').exists():
+                # Skip obvious embedding or distilbert examples unless explicitly requested
+                candidates.append((d.stat().st_mtime, d))
+        if not candidates:
+            return None
+        candidates.sort(reverse=True)
+        return str(candidates[0][1])
+
+    stm_path = None
+    if enable_self_train:
+        if self_train_model_path:
+            p = Path(self_train_model_path)
+            if p.exists() and (p/ 'model.pkl').exists() and (p / 'vectorizer.pkl').exists():
+                stm_path = str(p)
+            else:  # pragma: no cover - defensive
+                print(f"[warn] Provided self-train model path invalid or missing artifacts: {self_train_model_path}")
+        else:
+            stm_path = _discover_self_train_model()
+            if stm_path:
+                print(f"[info] Auto-discovered self-train model: {stm_path}")
+            else:
+                print("[info] No self-train model artifacts discovered; proceeding heuristic/zero-shot only.")
+    pipeline = ClassifierPipeline(PipelineConfig(**pipe_cfg_kwargs), self_train_model_path=stm_path)
 
     count = 0
     first_meta = None
@@ -274,6 +308,7 @@ def build_parser():
     p.add_argument('--conflict-dampener', type=float)
     p.add_argument('--model-floor', type=float)
     p.add_argument('--zero-shot-model')
+    p.add_argument('--model', help='Path to self-train model directory (containing model.pkl & vectorizer.pkl)')
     p.add_argument('--strict', action='store_true')
     p.add_argument('--no-validate', action='store_true')
     p.add_argument('--summary-lines', type=int, default=3)
@@ -309,6 +344,7 @@ def main(argv=None):
         conflict_dampener=args.conflict_dampener,
         model_floor=args.model_floor,
         zero_shot_model=args.zero_shot_model,
+    self_train_model_path=args.model,
         strict_health=args.strict,
         validate=not args.no_validate,
         summary_lines=args.summary_lines,

@@ -43,7 +43,9 @@ except Exception:  # pragma: no cover
 
 @dataclass
 class PipelineConfig:
-    strong_rule_threshold: float = 0.75
+    # Threshold below which heuristic rule strength is considered weak enough to allow model refinement.
+    # Lowered from 0.75 -> 0.40 to permit self-train / zero-shot to engage more frequently.
+    strong_rule_threshold: float = 0.40
     model_floor: float = 0.55
     enable_self_train: bool = True
     enable_zero_shot: bool = False
@@ -54,6 +56,7 @@ class PipelineConfig:
     margin_threshold: float = 0.15         # NLI top1 - top2 score needed to lock label
     enable_conflict_dampener: bool = False # reduce confidence when sources disagree with low margin
     conflict_dampener: float = 0.05        # amount to subtract from confidence in conflict cases
+    confidence_min_floor: float = 0.15     # ensure confidence not absurdly low when at least one method supports label
     enable_provisional_risk: bool = False  # add provisional Risk label similar to Advantage logic
     rationale_limit: int = 180
     debug: bool = False
@@ -222,6 +225,10 @@ class ClassifierPipeline:
                 else:
                     confidence_candidates.append(baseline)  # keep baseline
         base_conf = max(confidence_candidates)
+        # Apply a soft minimum floor if any model / NLI evidence present and base_conf extremely low.
+        if base_conf < self.cfg.confidence_min_floor:
+            if (nli and nli.get('available')) or model_prob is not None or rule_strength > 0:
+                base_conf = self.cfg.confidence_min_floor
         # Conflict dampener: if enabled and provenance shows both zero-shot and self-train adjustments without margin lock
         if self.cfg.enable_conflict_dampener:
             if any(p.startswith('self-train') for p in provenance) and any(p.startswith('zero-shot') for p in provenance) and 'nli-margin-lock' not in provenance:
